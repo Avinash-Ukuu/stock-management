@@ -3,10 +3,13 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Role;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -42,4 +45,78 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => ucwords($value),
+            set: fn ($value) => strtolower($value),
+        );
+    }
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class);
+    }
+
+    // show roles
+
+    public function showRoles()
+    {
+        if($this->roles->isEmpty())
+        {
+            return "N/A";
+        }
+        $roles  =   $this->roles->pluck("name","name")->toArray();
+        return implode(",",$roles);
+
+    }
+
+    // Policies check functions
+    public function hasRole($role)
+    {
+       if(($this->roles->where("name","admin"))->isNotEmpty() ? $this->roles->where("name","admin")->first()->name == 'admin' : false)
+        {
+            return true;
+        }
+        $roles = $this->roles->pluck('name')->toArray();
+        $roles = array_map('strtolower', $roles);
+        if (in_array(strtolower($role), $roles)) {
+            return true;
+        }
+        return false;
+    }
+
+    public function hasPermission($access, $module)
+    {
+        if ($this->hasRole('admin') ) {
+            return true;
+        }
+        if ($this->permissionCache == null) {
+            $this->permissionCache = $this->permissions();
+        }
+        if (Module::$moduleCache == null) {
+            Module::$moduleCache = Module::all();
+        }
+        $module = Module::$moduleCache->where('name', $module)->first();
+        if ($this->permissionCache->isNotEmpty() && !empty($module)) {
+            $permissions = $this->permissionCache->where('module_id', $module->id);
+            if ($permissions->isNotEmpty()) {
+                $permissions = $permissions->where('name', $access);
+                if ($permissions->isNotEmpty()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function permissions()
+    {
+        return $this->roles->load('permissions')->pluck('permissions')->collapse()->map(function ($item) {
+            $item->access = strtolower($item->access);
+            return $item;
+        });
+    }
 }

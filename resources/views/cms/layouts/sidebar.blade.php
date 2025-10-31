@@ -30,35 +30,44 @@
                     </a>
                 </li>
 
-                <li class="nav-item menu-open">
-                    <a href="#" class="nav-link active">
-                        <i class="nav-icon fas fa-tachometer-alt"></i>
-                        <p>
-                            Dashboard
-                            <i class="right fas fa-angle-left"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="./index.html" class="nav-link active">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Dashboard v1</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="./index2.html" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Dashboard v2</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="./index3.html" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Dashboard v3</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                {{-- @can('admin', new App\Models\User()) --}}
+                    <li class="nav-item @if (in_array(Route::currentRouteName(), ['user.index', 'role.index', 'module.index', 'permission.index'])) menu-open @endif">
+                        <a href="#" class="nav-link  @if (in_array(Route::currentRouteName(), ['user.index', 'role.index', 'module.index', 'permission.index'])) active @endif">
+                            <i class="nav-icon fas fa-users"></i>
+                            <p> User Management <i class="right fas fa-angle-left"></i></p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ route('user.index') }}"
+                                    class="nav-link @if (Route::currentRouteName() == 'user.index') active @endif">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Users</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('role.index') }}"
+                                    class="nav-link @if (Route::currentRouteName() == 'role.index') active @endif">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Roles</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('permission.index') }}"
+                                    class="nav-link @if (Route::currentRouteName() == 'permission.index') active @endif">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Permissions</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('module.index') }}"
+                                    class="nav-link @if (Route::currentRouteName() == 'module.index') active @endif">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Modules</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                {{-- @endcan --}}
 
 
             </ul>
