@@ -14,13 +14,13 @@ class UserPolicy
         return $user->hasRole("admin");
     }
 
-    public function staff(User $user)
-    {
-        return $user->hasPermission("management","staff");
-    }
+    // public function staff(User $user)
+    // {
+    //     return $user->hasPermission("management","staff");
+    // }
 
-    public function departmentHead(User $user)
-    {
-        return $user->hasPermission("management","departmentHead");
-    }
+    // public function departmentHead(User $user)
+    // {
+    //     return $user->hasPermission("management","departmentHead");
+    // }
 }
