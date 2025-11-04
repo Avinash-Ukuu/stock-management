@@ -5,8 +5,8 @@
             <div class="row mb-2">
                 <div class="col">
                     <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ route('user.index') }}">User List</a></li>
-                        <li class="breadcrumb-item active">User Form</li>
+                        <li class="breadcrumb-item"><a href="{{ route('stock.index') }}">Stock List</a></li>
+                        <li class="breadcrumb-item active">Stock Form</li>
                     </ol>
                 </div><!-- /.col -->
             </div><!-- /.row -->
@@ -15,70 +15,106 @@
     <div class="col-12">
         <div class="card card-primary">
             <div class="card-header">
-                <h3 class="card-title">User Form</h3>
+                <h3 class="card-title">Stock Form</h3>
+                <div class="card-tools"><span class="text-danger"><b>Note:-</b> </span><b>*</b> Fields are Required</div>
             </div>
 
-            {!! Form::model($object, [
-                'method' => $method,
-                'url' => $url,
-                'onSubmit' => "document.getElementById('submit').disabled=true;",
-                'files' => true,
-            ]) !!}
+            {{ Form::model($object, ['url' => $url, 'method' => $method, 'onSubmit' => "document.getElementById('submit').disabled=true;",'files' => true]) }}
             <input type="hidden" name="id" value="{{ $object->id }}">
             <div class="card-body">
                 <div class="row ml-0"><b>Note :- </b>&nbsp;<p class="text-danger">Name field should only contain
                         alphabetical characters.</p>
                 </div>
-                <div class="form-group">
-                    {{ Form::label('name', 'Name', []) }}<span style="color: red;"> *</span>
-                    {{ Form::text('name', null, ['class' => 'form-control name', 'placeholder' => 'Enter Name', 'required']) }}
-                </div>
-                <div class="form-group">
-                    {{ Form::label('email', 'Email', []) }}<span style="color: red;"> *</span>
-                    {{ Form::email('email', null, ['class' => 'form-control', 'placeholder' => 'Enter Email', 'required', 'email']) }}
-                    <small id="emailError" style="color: red; display: none;">Invalid email type. Please enter an @gmail.com
-                    </small>
+
+                <div class="row">
+                    <div class="form-group col-4">
+                        {{ Form::label('category_id', 'Select Category', []) }}<span style="color: red;"> *</span>
+                        {{ Form::select('category_id', $categories, null, ['class' => 'form-control select2', 'placeholder' => 'Select Category', 'data-placeholder' => 'Select Category', 'required']) }}
+                    </div>
+                    <div class="form-group col-4">
+                        {{ Form::label('name', 'Name', []) }}<span style="color: red;"> *</span>
+                        {{ Form::text('name', null, ['class' => 'form-control name', 'placeholder' => 'Enter Name', 'required']) }}
+                    </div>
+                    <div class="form-group col-4">
+                        {{ Form::label('description', 'Description', []) }}
+                        {{ Form::text('description', null, ['class' => 'form-control', 'placeholder' => 'Enter Description']) }}
+                    </div>
                 </div>
 
-                <div class="form-group" id="image">
-                    {{ Form::label('profile_pic', 'Profile Picture') }}
-                    {{ Form::file('profile_pic', ['class' => 'file', 'id'=>'imageField','accept' => 'image/*']) }}
+                <div class="row">
+                    <div class="form-group col-3">
+                        {{ Form::label('vendor', 'Vendor', []) }}
+                        {{ Form::text('vendor', null, ['class' => 'form-control', 'placeholder' => 'Enter Vendor', 'required']) }}
+                    </div>
+
+                    <div class="form-group col-3">
+                        {{ Form::label('purchase_date', 'Purchase Date', []) }}
+                        {{ Form::date('purchase_date', null, ['class' => 'form-control', 'placeholder' => 'Enter Purchase Date','max'=> date('Y-m-d'), 'required']) }}
+                    </div>
+
+                    <div class="form-group col-3">
+                        {{ Form::label('total_quantity', 'Total Quantity', []) }}
+                        {{ Form::number('total_quantity', null, ['class' => 'form-control', 'placeholder' => 'Enter Total Quantity', 'required', 'min' => '0']) }}
+                    </div>
+
+                    <div class="form-group col-3">
+                        {{ Form::label('available_quantity', 'Available Quantity', []) }}
+                        {{ Form::number('available_quantity', null, ['class' => 'form-control', 'placeholder' => 'Enter Available Quantity', 'required', 'min' => '0']) }}
+                    </div>
+
+                </div>
+
+                <div class="row">
+                    <div class="form-group col-4">
+                        {{ Form::label('unit_price', 'Unit Price', []) }}
+                        {{ Form::number('unit_price', null, ['class' => 'form-control', 'placeholder' => 'Enter Unit Price', 'required', 'min' => '0', 'step' => '0.01']) }}
+                    </div>
+
+                    <div class="form-group col-4">
+                        {{ Form::label('condition', 'Select Condition', []) }}
+                        {{ Form::select('condition', $conditions, null, ['class' => 'form-control select2', 'placeholder' => 'Select Condition', 'data-placeholder' => 'Select Condition', 'required']) }}
+                    </div>
+
+                    <div class="form-group col-4">
+                        {{ Form::label('qr_required', 'QR Required', []) }}
+                        {{ Form::select('qr_required', ['0'=>'NO','1'=>'Yes'], null, ['class' => 'form-control select2', 'placeholder' => 'QR Required', 'data-placeholder' => 'QR Required', 'required']) }}
+                    </div>
+
+                </div>
+
+                <div class="row">
+                    <div class="form-group" id="image">
+                    {{ Form::label('image', 'Image') }}
+                    {{ Form::file('image', ['class' => 'file-upload-default','id'=>'imageField', 'accept' => 'image/jpg, image/jpeg, image/png']) }}
 
                     <div class="row">
                         <div class="file-preview mb-2 mt-2 mr-2 ml-2" id="image_preview"></div>
                         <div class="image-preview mt-2  ml-2">
-                            @if (!empty($object->profile_pic) && file_exists("uploads/users/" . $object->profile_pic))
-                            {{ Form::label('profile_pic', 'Image',['class'=>'mr-2']) }}
+                            @if (!empty($object->image) && file_exists("uploads/stocks/" . $object->image))
+                            {{ Form::label('image', 'Image',['class'=>'mr-2']) }}
                                 <img style="background:thistle;max-height: 150px;"
-                                    src={{ asset('uploads/users/' . $object->profile_pic) }} />
+                                    src={{ asset('uploads/stocks/' . $object->image) }} />
                             @endif
                         </div>
                     </div>
+                </div>
+
                 </div>
             </div>
             <!-- /.card-body -->
 
             <div class="card-footer">
-                <div class="row">
-                    <div class="col-md-6">
-                        <button type="submit" id="submit" class="btn btn-primary">Submit</button>
-                    </div>
-                    <div class="col-md-6 text-right">
-                        <div>
-                            <span class="text-danger"><b>Note:-</b></span>
-                            <span> <b>*</b> Fields are Required</span>
-                        </div>
-                    </div>
-                </div>
+                <button type="submit" id="submit" class="btn btn-primary">Submit</button>
             </div>
-            {!! Form::close() !!}
+            {{ Form::close() }}
         </div>
     </div>
 @endsection
 @section('footerScript')
     <script>
         $(document).ready(function() {
-            
+
+
             $('#imageField').on('change', function() {
                 validateFile(this, ['image/jpeg', 'image/jpg','image/png'], 2 * 1024 * 1024, '#image_preview');
             });
@@ -134,6 +170,7 @@
             }
 
 
+
             var category = $(".name").val();
             if (category == "") {
                 $('#submit').prop('disabled', true);
@@ -161,21 +198,6 @@
                     $('#submit').prop('disabled', true);
                 } else {
                     $('#submit').prop('disabled', false);
-                }
-            });
-
-
-            const $emailError = $('#emailError');
-            $('#email').on('input', function() {
-                const email = $('#email').val().trim();
-                const gmailRegex = /@gmail\.com$/i;
-
-                if (email === '' || gmailRegex.test(email)) {
-                    $emailError.hide();
-                    $('#submit').prop('disabled', false);
-                } else {
-                    $emailError.show();
-                    $('#submit').prop('disabled', true);
                 }
             });
 

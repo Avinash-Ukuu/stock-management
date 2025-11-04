@@ -178,7 +178,7 @@
         }
     </script>
 
-    @yield('footer-scripts')
+    @yield('footerScript')
 </body>
 
 </html>

@@ -30,7 +30,8 @@
                     </a>
                 </li>
 
-                {{-- @can('admin', new App\Models\User()) --}}
+                <!-- User Management -->
+                @can('admin', new App\Models\User())
                     <li class="nav-item @if (in_array(Route::currentRouteName(), ['user.index', 'role.index', 'module.index', 'permission.index'])) menu-open @endif">
                         <a href="#" class="nav-link  @if (in_array(Route::currentRouteName(), ['user.index', 'role.index', 'module.index', 'permission.index'])) active @endif">
                             <i class="nav-icon fas fa-users"></i>
@@ -67,9 +68,33 @@
                             </li>
                         </ul>
                     </li>
-                {{-- @endcan --}}
+                @endcan
+                <!-- /.User Management -->
 
-
+                <!-- /.Stock Management -->
+                <li class="nav-item @if (in_array(Route::currentRouteName(), ['category.index', 'stock.index'])) menu-open @endif">
+                    <a href="#" class="nav-link  @if (in_array(Route::currentRouteName(), ['category.index', 'stock.index'])) active @endif">
+                        <i class="nav-icon fas fa-chart-line"></i>
+                        <p> Stock Management <i class="right fas fa-angle-left"></i></p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{{ route('category.index') }}"
+                                class="nav-link @if (Route::currentRouteName() == 'category.index') active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Category List</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('stock.index') }}"
+                                class="nav-link @if (Route::currentRouteName() == 'stock.index') active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Stock List</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <!-- /.Stock Management -->
             </ul>
         </nav>
         <!-- /.sidebar-menu -->

@@ -43,13 +43,15 @@ DROP TABLE IF EXISTS `categories`;
 CREATE TABLE `categories` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
-  `description` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `categories` */
+
+insert  into `categories`(`id`,`name`,`created_at`,`updated_at`) values 
+(1,'furnicher','2025-11-01 10:49:13','2025-11-01 05:19:13');
 
 /*Table structure for table `departments` */
 
@@ -243,6 +245,25 @@ CREATE TABLE `roles` (
 insert  into `roles`(`id`,`name`,`description`,`created_at`,`updated_at`) values 
 (1,'admin',NULL,'2025-10-31 15:16:47',NULL),
 (2,'stock management','Management stock data','2025-11-01 04:01:31','2025-11-01 04:01:31');
+
+/*Table structure for table `stock_items` */
+
+DROP TABLE IF EXISTS `stock_items`;
+
+CREATE TABLE `stock_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `stock_id` int(11) DEFAULT NULL,
+  `unique_code` varchar(255) DEFAULT NULL,
+  `qr_code` varchar(255) DEFAULT NULL,
+  `condition` varchar(255) DEFAULT NULL,
+  `assigned_to` int(11) DEFAULT NULL,
+  `assigned_department` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `stock_items` */
 
 /*Table structure for table `stock_logs` */
 

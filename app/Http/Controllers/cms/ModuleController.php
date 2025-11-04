@@ -110,7 +110,7 @@ class ModuleController extends Controller
             return back();
         }
 
-        Permission::where('id',$module->id)->delete();
+        Permission::where('module_id',$module->id)->delete();
         $module->delete();
         Session::flash("success","Module Deleted");
 
