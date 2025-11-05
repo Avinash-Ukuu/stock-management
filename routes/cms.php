@@ -3,6 +3,7 @@
 use App\Http\Controllers\cms\CategoryController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\cms\DashboardController;
+use App\Http\Controllers\cms\DepartmentController;
 use App\Http\Controllers\cms\ModuleController;
 use App\Http\Controllers\cms\PermissionController;
 use App\Http\Controllers\cms\RoleController;
@@ -33,3 +34,6 @@ Route::resource('stock',                    StockController::class);
 
 //Stock Item
 Route::resource('stock-item',               StockItemController::class);
+
+//Department
+Route::resource('department',               DepartmentController::class);

@@ -71,6 +71,15 @@
                 @endcan
                 <!-- /.User Management -->
 
+                <!-- Department -->
+                <li class="nav-item">
+                    <a href="{{ route('department.index') }}" class="nav-link">
+                        <i class="nav-icon fas fa-building"></i>
+                        <p>Department</p>
+                    </a>
+                </li>
+                <!-- /.Department -->
+
                 <!-- /.Stock Management -->
                 <li class="nav-item @if (in_array(Route::currentRouteName(), ['category.index', 'stock.index','stock-item.index'])) menu-open @endif">
                     <a href="#" class="nav-link  @if (in_array(Route::currentRouteName(), ['category.index', 'stock.index','stock-item.index'])) active @endif">
