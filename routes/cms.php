@@ -7,6 +7,7 @@ use App\Http\Controllers\cms\ModuleController;
 use App\Http\Controllers\cms\PermissionController;
 use App\Http\Controllers\cms\RoleController;
 use App\Http\Controllers\cms\StockController;
+use App\Http\Controllers\cms\StockItemController;
 use App\Http\Controllers\cms\UserController;
 
 // Dashboard
@@ -29,3 +30,6 @@ Route::resource('category',                 CategoryController::class);
 
 //Stock
 Route::resource('stock',                    StockController::class);
+
+//Stock Item
+Route::resource('stock-item',               StockItemController::class);

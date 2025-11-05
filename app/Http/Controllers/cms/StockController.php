@@ -54,31 +54,34 @@ class StockController extends Controller
                     $sql = "categories.name LIKE ?";
                     $query->whereRaw($sql, ["%{$keyword}%"]);
                 })
-                // ->editColumn('certification_completed', function ($data) {
-                //     if ($data->is_completed == 1) {
-                //         return '<span class="badge badge-success">Completed</span>';
-                //     } else {
-                //         return '<span class="badge badge-danger">Not Completed</span>';
-                //     }
-                // })
+                ->editColumn('qr_required', function ($data) {
+                    if ($data->qr_required == 1) {
+                        return '<span class="badge badge-success">Yes</span>';
+                    } else {
+                        return '<span class="badge badge-danger">No</span>';
+                    }
+                })
+                ->editColumn('purchase_date', function ($data) {
+                    return Carbon::parse($data->purchase_date)->format('d-m-Y');
+                })
                 ->editColumn('action', function ($data) {
 
                     $editUrl        =   route('stock.edit', ['stock' => $data->id]);
-                    $deleteUrl      =   route('stock.destroy', ['stock' => $data->id]);
+                    // $deleteUrl      =   route('stock.destroy', ['stock' => $data->id]);
                     $detailUrl      =   route('stock.show', ['stock' => $data->id]);
                     $btn            =   '<div class="row">';
                     $btn            .=  '<a href="' . $editUrl . '"><i class="fa fa-edit ml-2 mr-2"></i></a><a href="' . $detailUrl . '"><i class="fa fa-info-circle ml-2 mr-2"></i></a>';
-                    if (auth()->user()->hasRole('admin')) {
-                        $btn        .=  '<a style="cursor: pointer;"
-                                            onclick="deleteItem(\'' . $deleteUrl . '\')">
-                                            <i class="fa fa-trash text-red ml-3"></i>
-                                        </a>';
-                    }
-                    $btn            .=  '</div>';
+                    // if (auth()->user()->hasRole('admin')) {
+                    //     $btn        .=  '<a style="cursor: pointer;"
+                    //                         onclick="deleteItem(\'' . $deleteUrl . '\')">
+                    //                         <i class="fa fa-trash text-red ml-3"></i>
+                    //                     </a>';
+                    // }
+                    // $btn            .=  '</div>';
 
                     return $btn;
                 })
-                ->rawColumns(['created_by', 'category', 'action'])
+                ->rawColumns(['purchase_date','qr_required','created_by', 'category', 'action'])
                 ->make(true);
         }
 
@@ -147,7 +150,14 @@ class StockController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $data['stock']          =       Stock::with(['category','createdBy'])->find($id);
+        if(empty($data['stock']))
+        {
+            Session::flash('error','Data Not Found');
+            return back();
+        }
+
+        return view('cms.stock.detail',$data);
     }
 
     /**

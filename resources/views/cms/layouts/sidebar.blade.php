@@ -72,8 +72,8 @@
                 <!-- /.User Management -->
 
                 <!-- /.Stock Management -->
-                <li class="nav-item @if (in_array(Route::currentRouteName(), ['category.index', 'stock.index'])) menu-open @endif">
-                    <a href="#" class="nav-link  @if (in_array(Route::currentRouteName(), ['category.index', 'stock.index'])) active @endif">
+                <li class="nav-item @if (in_array(Route::currentRouteName(), ['category.index', 'stock.index','stock-item.index'])) menu-open @endif">
+                    <a href="#" class="nav-link  @if (in_array(Route::currentRouteName(), ['category.index', 'stock.index','stock-item.index'])) active @endif">
                         <i class="nav-icon fas fa-chart-line"></i>
                         <p> Stock Management <i class="right fas fa-angle-left"></i></p>
                     </a>
@@ -90,6 +90,13 @@
                                 class="nav-link @if (Route::currentRouteName() == 'stock.index') active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Stock List</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('stock-item.index') }}"
+                                class="nav-link @if (Route::currentRouteName() == 'stock-item.index') active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Stock Item List</p>
                             </a>
                         </li>
                     </ul>
