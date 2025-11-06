@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\User;
 use App\Models\StockItem;
+use App\Models\StockUsage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,10 +31,10 @@ class Stock extends Model
         return $this->hasMany(StockItem::class);
     }
 
-    // public function stockUsages():HasMany
-    // {
-    //     return $this->hasMany(StockUsage::class);
-    // }
+    public function stockUsages():HasMany
+    {
+        return $this->hasMany(StockUsage::class);
+    }
 
     // public function stockLogs():HasMany
     // {

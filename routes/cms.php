@@ -9,6 +9,7 @@ use App\Http\Controllers\cms\PermissionController;
 use App\Http\Controllers\cms\RoleController;
 use App\Http\Controllers\cms\StockController;
 use App\Http\Controllers\cms\StockItemController;
+use App\Http\Controllers\cms\StockUsageController;
 use App\Http\Controllers\cms\UserController;
 
 // Dashboard
@@ -37,3 +38,9 @@ Route::resource('stock-item',               StockItemController::class);
 
 //Department
 Route::resource('department',               DepartmentController::class);
+
+//Stock Usage
+Route::get('stock-usage',                   [StockUsageController::class,'index'])->name('stock-usage.index');
+Route::get('stock-usage/create',            [StockUsageController::class,'create'])->name('stock-usage.create');
+Route::post('stock-usage/store',            [StockUsageController::class,'store'])->name('stock-usage.store');
+
