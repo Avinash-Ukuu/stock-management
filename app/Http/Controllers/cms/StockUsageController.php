@@ -7,6 +7,7 @@ use App\Models\StockItem;
 use App\Models\Department;
 use App\Models\StockUsage;
 use Illuminate\Http\Request;
+use App\Models\StockConditionLog;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Session;
 use Yajra\DataTables\Facades\DataTables;
@@ -17,7 +18,7 @@ class StockUsageController extends Controller
     {
         $data['usages']     =   StockUsage::with(['stock', 'department'])->latest()->get();
 
-          if ($request->ajax()) {
+        if ($request->ajax()) {
             $data       =   StockUsage::join('stocks', 'stocks.id', '=', 'stock_usages.stock_id')->leftJoin('departments', 'departments.id', '=', 'stock_usages.department_id')->select(
                 'stock_usages.id as id',
                 'stock_usages.quantity as quantity',
@@ -25,6 +26,7 @@ class StockUsageController extends Controller
                 'stock_usages.return_date as return_date',
                 'stock_usages.condition_on_return as condition_on_return',
                 'stock_usages.remarks as remarks',
+                'stock_usages.returned_quantity as returned_quantity',
                 'stock_usages.created_at as created_at',
                 'departments.name as department',
                 'stocks.name as stock'
@@ -44,7 +46,16 @@ class StockUsageController extends Controller
                     $sql = "departments.name LIKE ?";
                     $query->whereRaw($sql, ["%{$keyword}%"]);
                 })
-                ->rawColumns(['department', 'stock'])
+                ->editColumn('return_stock', function ($data) {
+
+                    $editUrl        =   route('stock-usage.returnForm', ['id' => $data->id]);
+                    $btn            =   '<div class="row">';
+                    $btn            .=  '<a href="' . $editUrl . '"><i class="fa fa-edit ml-2 mr-2"></i></a>';
+                    $btn            .=  '</div>';
+
+                    return $btn;
+                })
+                ->rawColumns(['department', 'stock', 'return_stock'])
                 ->make(true);
         }
 
@@ -58,13 +69,13 @@ class StockUsageController extends Controller
         $data['url']            =   route('stock-usage.store');
         $stocks                 =   Stock::where('available_quantity', '>', 0)->get();
         $stockOptions           =   $stocks->mapWithKeys(function ($stock) {
-                                            return [$stock->id => $stock->name . ' (' . $stock->available_quantity . ')'];
-                                        });
+            return [$stock->id => $stock->name . ' (' . $stock->available_quantity . ')'];
+        });
 
         $data['stocks']         =   $stockOptions;
-        $data['departments']    =   Department::pluck('name','id')->toArray();
+        $data['departments']    =   Department::pluck('name', 'id')->toArray();
 
-        return view('cms.stockUsage.form',$data);
+        return view('cms.stockUsage.form', $data);
     }
 
     public function store(Request $request)
@@ -79,35 +90,121 @@ class StockUsageController extends Controller
         $stock          =       Stock::findOrFail($request->stock_id);
 
         if ($stock->available_quantity < $request->quantity) {
-            Session::flash('error','Not enough stock available.');
+            Session::flash('error', 'Not enough stock available.');
             return back();
         }
 
         // Create usage record
         $stockUsage     =       StockUsage::create([
-                                    'stock_id' => $stock->id,
-                                    'department_id' => $request->department_id,
-                                    'quantity' => $request->quantity,
-                                    'issue_date' => $request->issue_date,
-                                    'remarks' => $request->remarks,
-                                ]);
+            'stock_id' => $stock->id,
+            'department_id' => $request->department_id,
+            'quantity' => $request->quantity,
+            'issue_date' => $request->issue_date,
+            'remarks' => $request->remarks,
+        ]);
 
         // Update stock quantity
         $stock->decrement('available_quantity', $request->quantity);
 
-        if($stock->qr_required == 1)
-        {
+        if ($stock->qr_required == 1) {
             // Assign items to department (if item-based)
             $stockItems     =       StockItem::where('stock_id', $stock->id)
-                                    ->whereNull('assigned_department')
-                                    ->take($request->quantity)
-                                    ->get();
+                ->whereNull('assigned_department')
+                ->take($request->quantity)
+                ->get();
 
             foreach ($stockItems as $item) {
                 $item->update(['assigned_department' => $request->department_id]);
             }
         }
 
+        StockConditionLog::create([
+            'stock_id'          =>      $stock->id,
+            'stock_usage_id'    =>      $stockUsage->id,
+            'condition'         =>      $stock->condition,
+            'quantity'          =>      $request->quantity,
+            'type'              =>      'issue',
+        ]);
+
         return redirect()->route('stock-usage.index')->with('success', 'Stock assigned successfully.');
+    }
+
+    public function returnForm($id)
+    {
+        $data['usage']          =   StockUsage::with('stock')->findOrFail($id);
+        $data['conditions']     =   ['new' => 'New', 'good' => 'Good', 'needs_repair' => 'Needs Repair', 'damaged' => 'Damaged'];
+
+        return view('cms.stockUsage.return', $data);
+    }
+
+    public function returnStore(Request $request, $id)
+    {
+        $usage = StockUsage::findOrFail($id);
+        $stock = Stock::findOrFail($usage->stock_id);
+
+        $request->validate([
+            'return_date'           => 'required|date',
+            'remarks'               => 'nullable|string',
+            'condition_on_return'   => 'required|array',
+            'condition_on_return.*' => 'integer|min:0',
+        ]);
+
+        $totalReturned = array_sum($request->condition_on_return);
+
+        // Prevent over-return
+        if (($usage->returned_quantity + $totalReturned) > $usage->quantity) {
+            return back()->with('error', 'Return quantity cannot exceed issued quantity.');
+        }
+
+        // Update returned quantity
+        $newReturned = $usage->returned_quantity + $totalReturned;
+
+        // Update stock usage
+        $usage->update([
+            'returned_quantity' => $newReturned,
+            'return_date' => $request->return_date,
+            'condition_on_return' => json_encode($request->condition_on_return), // Store as JSON for record
+            'remarks' => $request->remarks,
+        ]);
+
+        // Update stock available quantity (only for usable conditions)
+        $usableQty = ($request->condition_on_return['new'] ?? 0)
+            + ($request->condition_on_return['good'] ?? 0);
+
+        if ($usableQty > 0) {
+            $stock->increment('available_quantity', $usableQty);
+        }
+
+        // Log each condition to stock_condition_logs
+        foreach ($request->condition_on_return as $condition => $qty) {
+            if ($qty > 0) {
+                StockConditionLog::create([
+                    'stock_id'          => $stock->id,
+                    'stock_usage_id'    => $usage->id,
+                    'condition'         => $condition,
+                    'quantity'          => $qty,
+                    'type'              => 'return',
+                ]);
+            }
+        }
+
+        //  Handle QR-Required items
+        if ($stock->qr_required == 1 && $request->has('returned_items')) {
+            // returned_items will be an array like ['item_id' => 'condition']
+            foreach ($request->returned_items as $itemId => $condition) {
+                $item = StockItem::where('id', $itemId)
+                    ->where('assigned_department', $usage->department_id)
+                    ->first();
+
+                if ($item) {
+                    $item->update([
+                        'assigned_department' => null,
+                        'condition' => $condition,
+                    ]);
+                }
+            }
+        }
+
+        return redirect()->route('stock-usage.index')->with('success', 'Stock returned successfully.');
     }
 }

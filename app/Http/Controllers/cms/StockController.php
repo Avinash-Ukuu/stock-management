@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\StockItem;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\StockConditionLog;
 use App\Http\Requests\StockRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
@@ -139,6 +140,13 @@ class StockController extends Controller
                 ]);
             }
         }
+
+        StockConditionLog::create([
+            'stock_id'  =>  $stock->id,
+            'condition' =>  $request->condition,
+            'quantity'  =>  $request->total_quantity,
+            'type'      =>  'add',
+        ]);
 
         Session::flash("success", "Stock Data Store Successfully");
 

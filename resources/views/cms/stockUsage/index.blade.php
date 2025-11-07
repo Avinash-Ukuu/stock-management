@@ -28,8 +28,10 @@
                                 <th>Quantity</th>
                                 <th>Issue Date</th>
                                 <th>Return Date</th>
+                                <th>Return Quantity</th>
                                 <th>Condition On Return</th>
                                 <th>Remarks</th>
+                                <th>Return Stock</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -79,14 +81,23 @@
                         name: 'return_date'
                     },
                     {
+                        data: 'returned_quantity',
+                        name: 'returned_quantity'
+                    },
+                    {
                         data: 'condition_on_return',
                         name: 'condition_on_return'
                     },
-
                     {
                         data: 'remarks',
                         name: 'remarks',
                         orderable: false
+                    },
+                    {
+                        data: 'return_stock',
+                        name: 'return_stock',
+                        orderable: false,
+                        searchable: false
                     },
 
                 ]

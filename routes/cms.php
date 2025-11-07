@@ -43,4 +43,6 @@ Route::resource('department',               DepartmentController::class);
 Route::get('stock-usage',                   [StockUsageController::class,'index'])->name('stock-usage.index');
 Route::get('stock-usage/create',            [StockUsageController::class,'create'])->name('stock-usage.create');
 Route::post('stock-usage/store',            [StockUsageController::class,'store'])->name('stock-usage.store');
+Route::get('stock-usage/return/{id}',       [StockUsageController::class, 'returnForm'])->name('stock-usage.returnForm');
+Route::post('stock-usage/return/{id}',      [StockUsageController::class, 'returnStore'])->name('stock-usage.returnStore');
 
