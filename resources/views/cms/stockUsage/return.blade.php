@@ -19,7 +19,7 @@
                 <div class="card-tools"><span class="text-danger"><b>Note:-</b> </span><b>*</b> Fields are Required</div>
             </div>
 
-            {{ Form::open(['url' => route('stock-usage.returnStore', $usage->id), 'method' => 'POST', 'onSubmit' => "document.getElementById('submit').disabled=true;"]) }}
+            {{ Form::open(['url' => route('stock-usage.returnStock', $usage->id), 'method' => 'POST', 'onSubmit' => "document.getElementById('submit').disabled=true;"]) }}
 
             <div class="card-body">
                 <div class="row ml-0"><b>Note :- </b>&nbsp;<p class="text-danger">Name field should only contain
@@ -123,8 +123,6 @@
                                             <option value="need_repair">Need Repair</option>
                                             <option value="damage">Damage</option>
                                         </select>
-                                        {{-- {{ Form::label('condition_on_return', 'Condition On Return', []) }}<span style="color: red;">*</span>
-                                        {{ Form::select('condition_on_return', $conditions, null, ['class' => 'form-control select2', 'placeholder' => 'Condition On Return', 'data-placeholder' => 'Condition On Return', 'required']) }} --}}
                                     </td>
                                 </tr>
                             @endforeach

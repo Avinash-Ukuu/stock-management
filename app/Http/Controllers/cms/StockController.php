@@ -82,7 +82,7 @@ class StockController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['purchase_date','qr_required','created_by', 'category', 'action'])
+                ->rawColumns(['purchase_date', 'qr_required', 'created_by', 'category', 'action'])
                 ->make(true);
         }
 
@@ -158,14 +158,13 @@ class StockController extends Controller
      */
     public function show(string $id)
     {
-        $data['stock']          =       Stock::with(['category','createdBy'])->find($id);
-        if(empty($data['stock']))
-        {
-            Session::flash('error','Data Not Found');
+        $data['stock']          =       Stock::with(['category', 'createdBy'])->find($id);
+        if (empty($data['stock'])) {
+            Session::flash('error', 'Data Not Found');
             return back();
         }
 
-        return view('cms.stock.detail',$data);
+        return view('cms.stock.detail', $data);
     }
 
     /**
@@ -198,6 +197,7 @@ class StockController extends Controller
 
             return redirect(route('stock.index'));
         }
+
         $stock->category_id         =       $request->category_id;
         $stock->name                =       $request->name;
         $stock->description         =       $request->description;
@@ -221,6 +221,56 @@ class StockController extends Controller
         }
 
         $stock->update();
+
+        if ($stock->qr_required) {
+            $existingCount = StockItem::where('stock_id', $stock->id)->count();
+
+            //  If no stock items yet, create all
+            if ($existingCount == 0) {
+                for ($i = 1; $i <= $stock->total_quantity; $i++) {
+                    $uniqueCode = strtoupper(Str::slug($stock->name)) . '-' . str_pad($i, 3, '0', STR_PAD_LEFT);
+                    StockItem::create([
+                        'stock_id' => $stock->id,
+                        'unique_code' => $uniqueCode,
+                        'qr_code' => null,
+                        'condition' => 'new',
+                    ]);
+                }
+
+            }
+            //  If total increased, add the difference
+            elseif ($stock->total_quantity > $existingCount) {
+                $diff = $stock->total_quantity - $existingCount;
+                for ($i = $existingCount + 1; $i <= $stock->total_quantity; $i++) {
+                    $uniqueCode = strtoupper(Str::slug($stock->name)) . '-' . str_pad($i, 3, '0', STR_PAD_LEFT);
+                    StockItem::create([
+                        'stock_id' => $stock->id,
+                        'unique_code' => $uniqueCode,
+                        'qr_code' => null,
+                        'condition' => 'new',
+                    ]);
+                }
+            }
+            //  If total decreased, remove extra items
+            elseif ($stock->total_quantity < $existingCount) {
+                $diff = $existingCount - $stock->total_quantity;
+                StockItem::where('stock_id', $stock->id)
+                    ->orderBy('id', 'desc')
+                    ->take($diff)
+                    ->delete();
+            }
+        } else {
+            // If QR no longer required, optionally remove StockItems
+            StockItem::where('stock_id', $stock->id)->delete();
+        }
+
+        // Log condition update
+        StockConditionLog::create([
+            'stock_id'  => $stock->id,
+            'condition' => $request->condition,
+            'quantity'  => $request->total_quantity,
+            'type'      => 'update',
+        ]);
 
         Session::flash("success", "Stock Data Store Successfully");
 

@@ -112,7 +112,7 @@
                             <a href="{{ route('stock-usage.index') }}"
                                 class="nav-link @if (Route::currentRouteName() == 'stock-usage.index') active @endif">
                                 <i class="far fa-circle nav-icon"></i>
-                                <p>Stock Usage List</p>
+                                <p>Assigned Stock List</p>
                             </a>
                         </li>
                         <li class="nav-item">
