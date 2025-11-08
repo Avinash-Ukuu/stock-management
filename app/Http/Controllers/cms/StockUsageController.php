@@ -131,80 +131,153 @@ class StockUsageController extends Controller
 
     public function returnForm($id)
     {
-        $data['usage']          =   StockUsage::with('stock')->findOrFail($id);
+        $data['usage']          =   StockUsage::with(['stock' => function ($query) use ($id) {
+            $usage = StockUsage::find($id);
+
+            $query->with(['stockItems' => function ($itemQuery) use ($usage) {
+                $itemQuery->where('assigned_department', $usage->department_id)
+                    ->whereNotNull('assigned_department');
+                // ->whereNull('returned_at'); // only show items not yet returned
+            }]);
+        }])->findOrFail($id);
+
         $data['conditions']     =   ['new' => 'New', 'good' => 'Good', 'needs_repair' => 'Needs Repair', 'damaged' => 'Damaged'];
 
         return view('cms.stockUsage.return', $data);
     }
 
-    public function returnStore(Request $request, $id)
+
+
+    public function returnStock(Request $request, $id)
     {
         $usage = StockUsage::findOrFail($id);
         $stock = Stock::findOrFail($usage->stock_id);
 
-        $request->validate([
-            'return_date'           => 'required|date',
-            'remarks'               => 'nullable|string',
-            'condition_on_return'   => 'required|array',
-            'condition_on_return.*' => 'integer|min:0',
-        ]);
-
-        $totalReturned = array_sum($request->condition_on_return);
-
-        // Prevent over-return
-        if (($usage->returned_quantity + $totalReturned) > $usage->quantity) {
-            return back()->with('error', 'Return quantity cannot exceed issued quantity.');
+        if ($stock->qr_required) {
+            $request->validate([
+                'return_date'       => 'required|date',
+                'remarks'           => 'nullable|string',
+                'returned_items'    => 'required|array',
+            ]);
+        } else {
+            $request->validate([
+                'return_date'           => 'required|date',
+                'remarks'               => 'nullable|string',
+                'condition_on_return'   => 'required|array',
+                'condition_on_return.*' => 'integer|min:0',
+            ]);
         }
 
-        // Update returned quantity
-        $newReturned = $usage->returned_quantity + $totalReturned;
+        // ==============================
+        // Handle QR-Required Items
+        // ==============================
+        if ($stock->qr_required) {
+            // Get issued item IDs for this department
+            $issuedItemIds = StockItem::where('stock_id', $usage->stock_id)
+                ->where('assigned_department', $usage->department_id)
+                ->pluck('id')
+                ->toArray();
 
-        // Update stock usage
-        $usage->update([
-            'returned_quantity' => $newReturned,
-            'return_date' => $request->return_date,
-            'condition_on_return' => json_encode($request->condition_on_return), // Store as JSON for record
-            'remarks' => $request->remarks,
-        ]);
+            $returnedItems = $request->returned_items ?? [];
 
-        // Update stock available quantity (only for usable conditions)
-        $usableQty = ($request->condition_on_return['new'] ?? 0)
-            + ($request->condition_on_return['good'] ?? 0);
+            // Filter only items that have a non-null condition
+            $filteredReturned = array_filter($returnedItems, function ($condition) {
+                return !is_null($condition) && $condition !== '';
+            });
 
-        if ($usableQty > 0) {
-            $stock->increment('available_quantity', $usableQty);
-        }
+            // Only consider issued items (ignore unissued ones)
+            $validReturnedItems = array_intersect(array_keys($filteredReturned), $issuedItemIds);
+            $totalReturned = count($validReturnedItems);
 
-        // Log each condition to stock_condition_logs
-        foreach ($request->condition_on_return as $condition => $qty) {
-            if ($qty > 0) {
-                StockConditionLog::create([
-                    'stock_id'          => $stock->id,
-                    'stock_usage_id'    => $usage->id,
-                    'condition'         => $condition,
-                    'quantity'          => $qty,
-                    'type'              => 'return',
-                ]);
+            // Handle null safely
+            $alreadyReturned = $usage->returned_quantity ?? 0;
+
+            // Prevent over-returning
+            if (($alreadyReturned + $totalReturned) > $usage->quantity) {
+                return back()->with('error', 'Return quantity cannot exceed issued quantity.');
+            }
+
+            // Update stock usage record
+            $usage->update([
+                'returned_quantity'   => $alreadyReturned + $totalReturned,
+                'return_date'         => $request->return_date,
+                'condition_on_return' => json_encode($filteredReturned),
+                'remarks'             => $request->remarks,
+            ]);
+
+            // Update each returned stock item
+            foreach ($validReturnedItems as $itemId) {
+                $condition = $filteredReturned[$itemId] ?? null;
+
+                if ($condition) {
+                    $item = StockItem::where('id', $itemId)
+                        ->where('assigned_department', $usage->department_id)
+                        ->first();
+
+                    if ($item) {
+                        // Mark item as returned
+                        $item->update([
+                            'assigned_department' => null,
+                            'condition' => $condition,
+                        ]);
+
+                        // Log the return
+                        StockConditionLog::create([
+                            'stock_id'          => $stock->id,
+                            'stock_usage_id'    => $usage->id,
+                            'condition'         => $condition,
+                            'quantity'          => 1,
+                            'type'              => 'return',
+                        ]);
+
+                        // Increase available if usable
+                        if (in_array($condition, ['new', 'good'])) {
+                            $stock->increment('available_quantity', 1);
+                        }
+                    }
+                }
             }
         }
 
-        //  Handle QR-Required items
-        if ($stock->qr_required == 1 && $request->has('returned_items')) {
-            // returned_items will be an array like ['item_id' => 'condition']
-            foreach ($request->returned_items as $itemId => $condition) {
-                $item = StockItem::where('id', $itemId)
-                    ->where('assigned_department', $usage->department_id)
-                    ->first();
+        // Handle Non-QR Items
+        else {
+            $totalReturned = array_sum($request->condition_on_return ?? []);
+            $alreadyReturned = $usage->returned_quantity ?? 0;
 
-                if ($item) {
-                    $item->update([
-                        'assigned_department' => null,
-                        'condition' => $condition,
+            if (($alreadyReturned + $totalReturned) > $usage->quantity) {
+                return back()->with('error', 'Return quantity cannot exceed issued quantity.');
+            }
+
+            $usage->update([
+                'returned_quantity'   => $alreadyReturned + $totalReturned,
+                'return_date'         => $request->return_date,
+                'condition_on_return' => json_encode($request->condition_on_return),
+                'remarks'             => $request->remarks,
+            ]);
+
+            // Calculate usable quantity (new + good)
+            $usableQty = ($request->condition_on_return['new'] ?? 0)
+                + ($request->condition_on_return['good'] ?? 0);
+
+            if ($usableQty > 0) {
+                $stock->increment('available_quantity', $usableQty);
+            }
+
+            // Create condition logs
+            foreach ($request->condition_on_return as $condition => $qty) {
+                if ($qty > 0) {
+                    StockConditionLog::create([
+                        'stock_id'          => $stock->id,
+                        'stock_usage_id'    => $usage->id,
+                        'condition'         => $condition,
+                        'quantity'          => $qty,
+                        'type'              => 'return',
                     ]);
                 }
             }
         }
 
-        return redirect()->route('stock-usage.index')->with('success', 'Stock returned successfully.');
+        return redirect()->route('stock-usage.index')
+            ->with('success', 'Stock returned successfully.');
     }
 }
