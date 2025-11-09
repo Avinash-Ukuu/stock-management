@@ -151,7 +151,7 @@ class UserController extends Controller
         return redirect(route("user.index"));
     }
 
-    public function changePassword(Request $request)
+    public function changePassword()
     {
         return view("cms.user.changePasswordForm");
     }
