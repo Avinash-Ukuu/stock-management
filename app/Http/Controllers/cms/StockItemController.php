@@ -116,12 +116,17 @@ class StockItemController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $stockItem              =   StockItem::find($id);
+        $stockItem              =   StockItem::with('stock')->find($id);
         if (empty($stockItem)) {
             Session::flash('error', 'Data Not found');
 
             return redirect(route('stock-item.index'));
         }
+
+        $data['description']        =   auth()->user()->name." has updated ".$stockItem->stock->name." stock item data";
+        $data['action']             =   "updated";
+        $data['stock_id']           =   $stockItem->stock->id;
+        saveStockLogs($data);
 
         $stockItem->unique_code         =       $request->unique_code;
         $stockItem->qr_code             =       $request->qr_code;

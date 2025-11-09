@@ -9,6 +9,7 @@ use App\Http\Controllers\cms\PermissionController;
 use App\Http\Controllers\cms\RoleController;
 use App\Http\Controllers\cms\StockController;
 use App\Http\Controllers\cms\StockItemController;
+use App\Http\Controllers\cms\StockLogController;
 use App\Http\Controllers\cms\StockUsageController;
 use App\Http\Controllers\cms\UserController;
 
@@ -46,3 +47,5 @@ Route::post('stock-usage/store',            [StockUsageController::class,'store'
 Route::get('stock-usage/return/{id}',       [StockUsageController::class, 'returnForm'])->name('stock-usage.returnForm');
 Route::post('stock-usage/return/{id}',      [StockUsageController::class, 'returnStock'])->name('stock-usage.returnStock');
 
+//Stocklog
+Route::get('stock-log',                     [StockLogController::class,'index'])->name('stock-log.index');

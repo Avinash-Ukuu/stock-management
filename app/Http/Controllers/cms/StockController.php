@@ -148,6 +148,11 @@ class StockController extends Controller
             'type'      =>  'add',
         ]);
 
+        $data['description']        =   auth()->user()->name." has created $stock->name stock";
+        $data['action']             =   "created";
+        $data['stock_id']           =   $stock->id;
+        saveStockLogs($data);
+
         Session::flash("success", "Stock Data Store Successfully");
 
         return redirect(route("stock.index"));
@@ -197,6 +202,11 @@ class StockController extends Controller
 
             return redirect(route('stock.index'));
         }
+
+        $data['description']        =   auth()->user()->name." has updated $stock->name stock";
+        $data['action']             =   "updated";
+        $data['stock_id']           =   $stock->id;
+        saveStockLogs($data);
 
         $stock->category_id         =       $request->category_id;
         $stock->name                =       $request->name;

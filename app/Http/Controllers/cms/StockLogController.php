@@ -15,10 +15,10 @@ class StockLogController extends Controller
         $this->authorize("admin",new User());
 
         if ($request->ajax()) {
-            $data = StockLog::leftJoin("users",'users.id',"=",'stock_logs.user_id')->leftJoin("stocks","=","stock_logs.stock_id")
+            $data = StockLog::leftJoin("users",'users.id',"=",'stock_logs.user_id')->leftJoin("stocks","stocks.id","=","stock_logs.stock_id")
                               ->select([
                                   'stock_logs.description as description',
-                                  'stock_logs.action as Action',
+                                  'stock_logs.action as action',
                                   'users.name as user',
                                   'stocks.name as stock',
                                   'stock_logs.created_at as Time'
@@ -56,7 +56,7 @@ class StockLogController extends Controller
     public function saveStockLogs($data)
     {
         $activityLogs                   =   new StockLog();
-        $activityLogs->module_id        =   $data['stock_id'];
+        $activityLogs->stock_id         =   $data['stock_id'];
         $activityLogs->action           =   $data['action'];
         $activityLogs->description      =   $data['description'];
         $activityLogs->user_id          =   auth()->user()->id;

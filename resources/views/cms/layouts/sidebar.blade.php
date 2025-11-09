@@ -125,6 +125,15 @@
                     </ul>
                 </li>
                 <!-- /.Stock Management -->
+
+                <!-- StockLog -->
+                <li class="nav-item">
+                    <a href="{{ route('stock-log.index') }}" class="nav-link">
+                        <i class="nav-icon fas fa-book-open"></i>
+                        <p>Stock Logs</p>
+                    </a>
+                </li>
+                <!-- /.StockLog -->
             </ul>
         </nav>
         <!-- /.sidebar-menu -->

@@ -126,6 +126,11 @@ class StockUsageController extends Controller
             'type'              =>      'issue',
         ]);
 
+        $data['description']        =   auth()->user()->name." has assigned $stock->name stock to ".$stockUsage->department->name." Department";
+        $data['action']             =   "assigned";
+        $data['stock_id']           =   $stock->id;
+        saveStockLogs($data);
+
         return redirect()->route('stock-usage.index')->with('success', 'Stock assigned successfully.');
     }
 
@@ -168,9 +173,7 @@ class StockUsageController extends Controller
             ]);
         }
 
-        // ==============================
         // Handle QR-Required Items
-        // ==============================
         if ($stock->qr_required) {
             // Get issued item IDs for this department
             $issuedItemIds = StockItem::where('stock_id', $usage->stock_id)
@@ -276,6 +279,11 @@ class StockUsageController extends Controller
                 }
             }
         }
+
+        $data['description']        =   $usage->department->name." Department returned $stock->name to the ".auth()->user()->name;
+        $data['action']             =   "returned";
+        $data['stock_id']           =   $stock->id;
+        saveStockLogs($data);
 
         return redirect()->route('stock-usage.index')
             ->with('success', 'Stock returned successfully.');

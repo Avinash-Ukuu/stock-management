@@ -42,6 +42,10 @@ class CategoryController extends Controller
         $category->name             =   $request->name;
         $category->save();
 
+        $data['description']        =   auth()->user()->name." has created $category->name category";
+        $data['action']             =   "created";
+        $data['stock_id']           =   $category->id;
+        saveStockLogs($data);
         Session::flash("success","Category Created");
 
         return redirect(route("category.index"));
@@ -83,6 +87,11 @@ class CategoryController extends Controller
             Session::flash("error","Category Already Deleted");
             return redirect(route("category.index"));
         }
+
+        $data['description']        =   auth()->user()->name." has updated $category->name category";
+        $data['action']             =   "updated";
+        $data['stock_id']           =   $category->id;
+        saveStockLogs($data);
 
         $category->name             =   $request->name;
         $category->update();
