@@ -24,7 +24,7 @@
                     <table id="example1" class="table table-bordered table-hover">
                         <thead>
                             <tr>
-                                <th>Image</th>
+                                <th>Id</th>
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Roles</th>
@@ -35,7 +35,8 @@
                         <tbody>
                             @foreach($users as $user)
                                 <tr>
-                                    <td><img src="{{ asset('uploads/users/'.$user->profile_pic) }}" height="50px" width="50px" class="img-circle elevation-2" alt="user image"></td>
+                                    {{-- <td><img src="{{ asset('uploads/users/'.$user->profile_pic) }}" height="50px" width="50px" class="img-circle elevation-2" alt="user image"></td> --}}
+                                    <td>{{  $loop->iteration }}</td>
                                     <td>{{ $user->name }}</td>
                                     <td>{{ $user->email }}</td>
                                     <td>{{ $user->showRoles() }}</td>

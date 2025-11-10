@@ -53,7 +53,8 @@ class UserController extends Controller
         $user->name             =   $request->name;
         $user->email            =   $request->email;
         $password               =   Str::random(8);
-        $user->password         =   Hash::make($password);
+        // $user->password         =   Hash::make($password);
+        $user->password         =   Hash::make('password');
         if ($request->has("profile_pic")) {
             $imageName  = "user_" . Carbon::now()->timestamp . '.' . $request->file('profile_pic')->getClientOriginalExtension();
             $request->file('profile_pic')->move(public_path('uploads/users/'), $imageName);
