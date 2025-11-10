@@ -52,7 +52,7 @@
                                     <p>Roles</p>
                                 </a>
                             </li>
-                            <li class="nav-item">
+                            {{-- <li class="nav-item">
                                 <a href="{{ route('permission.index') }}"
                                     class="nav-link @if (Route::currentRouteName() == 'permission.index') active @endif">
                                     <i class="far fa-circle nav-icon"></i>
@@ -65,7 +65,7 @@
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>Modules</p>
                                 </a>
-                            </li>
+                            </li> --}}
                         </ul>
                     </li>
                 @endcan

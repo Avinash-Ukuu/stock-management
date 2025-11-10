@@ -35,7 +35,7 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $role->name }}</td>
-                                    @if ($role->name != 'Admin')
+                                    @if ($role->name != 'admin')
                                         <td><a href="{{ route('assignPermissions', ['id' => $role->id]) }}"><i
                                                     class="fa fa-edit"></i></a></td>
                                         <td>
