@@ -14,7 +14,7 @@ use App\Http\Controllers\cms\StockUsageController;
 use App\Http\Controllers\cms\UserController;
 
 // Dashboard
-Route::get('dashboard',         [DashboardController::class,'dashboard'])->name('dashboard');
+Route::get('dashboard',                     [DashboardController::class,'dashboard'])->name('dashboard');
 
 // User Management( User, Role, Permission, Module )
 Route::resource('user',                     UserController::class);
